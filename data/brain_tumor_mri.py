@@ -5,9 +5,9 @@ import torchvision.transforms as transforms
 
 class BrainTumorMRI(object):
     paths = {
-        "train": "brain-tumor-mri-dataset/training",
-        "val": "brain-tumor-mri-dataset/training",
-        "test": "brain-tumor-mri-dataset/testing",
+        "train": "brain-tumor-mri-dataset/Training",
+        "val": "brain-tumor-mri-dataset/Training",
+        "test": "brain-tumor-mri-dataset/Testing",
     }
 
     transformations = transforms.Compose(

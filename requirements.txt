@@ -1,0 +1,11 @@
+numpy
+matplotlib
+pandas
+pytorch-lightning[extra]
+torch
+torchvision
+pydantic
+umap-learn
+scikit-learn
+interpret
+faiss-cpu
