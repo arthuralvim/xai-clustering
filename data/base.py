@@ -1,10 +1,11 @@
 from sklearn.model_selection import train_test_split
 from torch.utils.data import SubsetRandomSampler
 from torch.utils.data import DataLoader
-from torch.utils.data import DataLoader
+from torch.utils.data import Subset
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
 from pathlib import Path
+import torch
 import numpy as np
 
 
@@ -24,6 +25,7 @@ class BaseDataset(object):
         self,
         dataset_root,
         random_state=333,
+        reduce_to=None,
         batch_size=32,
         num_workers=4,
         train_size=None,
@@ -40,6 +42,7 @@ class BaseDataset(object):
         self.train_size = train_size
         self.val_size = val_size
         self.test_size = test_size
+        self.reduce_to = reduce_to
         self.test_sampler = None
         self.train_sampler = None
         self.val_sampler = None
@@ -112,33 +115,40 @@ class BaseDataset(object):
         data, labels = next(iter(self.test_dataloader))
         return data, labels.numpy()
 
+    def generate_dataset(self, env, transforms):
+        full_ = ImageFolder(
+            root=self.data_path.joinpath(self.config.get("paths").get(env)),
+            transform=transforms,
+        )
+
+        if self.reduce_to is not None:
+            n = len(full_)
+            torch.manual_seed(self.random_state)
+            self.reduce_indices = torch.randperm(n)[: int(self.reduce_to * n)]
+            setattr(
+                self,
+                f"reduce_{env}_targets",
+                [full_.targets[i] for i in self.reduce_indices],
+            )
+            return Subset(full_, indices=self.reduce_indices)
+
+        return full_
+
     @property
     def train_dataset(self):
-        return ImageFolder(
-            root=self.data_path.joinpath(self.config.get("paths").get("train")),
-            transform=self.train_transform,
-        )
+        return self.generate_dataset("train", self.train_transform)
 
     @property
     def val_dataset(self):
-        return ImageFolder(
-            root=self.data_path.joinpath(self.config.get("paths").get("val")),
-            transform=self.val_transform,
-        )
+        return self.generate_dataset("val", self.val_transform)
 
     @property
     def train_val_dataset(self):
-        return ImageFolder(
-            root=self.data_path.joinpath(self.config.get("paths").get("train_val")),
-            transform=self.train_val_transform,
-        )
+        return self.generate_dataset("train_val", self.train_val_transform)
 
     @property
     def test_dataset(self):
-        return ImageFolder(
-            root=self.data_path.joinpath(self.config.get("paths").get("test")),
-            transform=self.test_transform,
-        )
+        return self.generate_dataset("test", self.test_transform)
 
     def generate_dataloader(self, dataset, sampler):
         extra = {}

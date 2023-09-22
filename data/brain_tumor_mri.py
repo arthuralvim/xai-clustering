@@ -22,10 +22,16 @@ class BrainTumorMRI(BaseDataset):
 
     @property
     def train_val_targets(self):
+        if self.reduce_to is not None:
+            self.train_val_dataset
+            return self.reduce_train_val_targets
         return self.train_val_dataset.targets
 
     @property
     def test_targets(self):
+        if self.reduce_to is not None:
+            self.test_dataset
+            return self.reduce_test_targets
         return self.test_dataset.targets
 
     @property
