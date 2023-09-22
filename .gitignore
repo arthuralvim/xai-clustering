@@ -160,6 +160,8 @@ cython_debug/
 #.idea/
 .DS_Store
 repositories/*
-checkpoints/*
+lightning_logs/*
+!lightning_logs/.gitkeep
 datasets/*
+!datasets/.gitkeep
 .vscode/*
