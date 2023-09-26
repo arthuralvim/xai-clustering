@@ -6,7 +6,7 @@ import torchvision.models as models
 from typing import Dict
 from torch.nn import functional as F
 import pytorch_lightning as pl
-from torchmetrics import Accuracy
+from torchmetrics import MetricCollection, Accuracy, Precision, Recall
 
 
 class VGG(pl.LightningModule):
@@ -65,28 +65,65 @@ class VGG(pl.LightningModule):
         else:
             raise ValueError("Unknown criterion")
 
-    def torch_loop(self, batch, batch_idx, metric_name, metric_call):
+    def training_step(self, batch, batch_idx):
+        # print(f"runnning training batch: {batch_idx}")
         x, y = batch
         y_hat = self(x)
         loss = self.loss_fn(y_hat, y)
-        self.log(metric_name, loss, prog_bar=True)
-        metric_call(y_hat, y)
+        y_pred = torch.argmax(y_hat, dim=1)
+        self.train_acc(y_pred, y)
+
+        self.log(
+            "train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
+        )
+        self.log("train_acc", self.train_acc, on_step=True, on_epoch=True, logger=True)
         return loss
 
-    def training_step(self, batch, batch_idx):
-        return self.torch_loop(
-            batch, batch_idx, metric_name="train_loss", metric_call=self.train_acc
-        )
-
     def validation_step(self, batch, batch_idx):
-        return self.torch_loop(
-            batch, batch_idx, metric_name="val_loss", metric_call=self.val_acc
+        # print(f"runnning validation batch: {batch_idx}")
+        x, y = batch
+        y_hat = self(x)
+        loss = self.loss_fn(y_hat, y)
+        y_pred = torch.argmax(y_hat, dim=1)
+        self.val_acc(y_pred, y)
+
+        self.log(
+            "val_loss", loss, prog_bar=True, on_step=True, on_epoch=True, logger=True
         )
+        self.log("val_acc", self.val_acc, on_step=True, on_epoch=True, logger=True)
+        return loss
+
+    # def on_validation_end(self) -> None:
+    #     if self.trainer.sanity_checking:
+    #         return super().on_validation_end()
+    #     train_loss = self.trainer.callback_metrics["train_loss"]
+    #     val_loss = self.trainer.callback_metrics["val_loss"]
+    #     train_acc = self.trainer.callback_metrics["train_acc"]
+    #     val_acc = self.trainer.callback_metrics["val_acc"]
+    #     epoch = self.trainer.current_epoch
+    #     print(
+    #         f"Epoch {epoch} train_loss={train_loss:.4f}/train_acc={train_acc:.4f} val_loss={val_loss:.4f}/val_acc={val_acc:.4f}"
+    #     )
+    #     return super().on_validation_end()
 
     def test_step(self, batch, batch_idx):
-        return self.torch_loop(
-            batch, batch_idx, metric_name="test_loss", metric_call=self.test_acc
-        )
+        # print(f"runnning test batch: {batch_idx}")
+        x, y = batch
+        y_hat = self(x)
+        loss = self.loss_fn(y_hat, y)
+        y_pred = torch.argmax(y_hat, dim=1)
+        self.test_acc(y_pred, y)
+        self.log("test_loss", loss, prog_bar=True)
+        self.log("test_acc", self.test_acc, on_step=False, on_epoch=True, logger=True)
+        return loss
+
+    def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        # print(f"runnning prediction batch: {batch_idx}")
+        x, y = batch
+        y_hat = self(x)
+        y_pred = torch.argmax(y_hat, dim=1).detach().numpy()
+        y_truth = y.detach().numpy()
+        return y_truth, y_pred
 
     def configure_optimizers(self):
         if "optimizers" in self.config:
