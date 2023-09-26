@@ -21,6 +21,7 @@ pytorch-lightning = {extras = ["extra"], version = "^2.0.9"}
 torchsummary = "^1.5.1"
 pydantic = "^2.3.0"
 faiss-cpu = "^1.7.4"
+seaborn = "^0.12.2"
 
 
 [tool.poetry.group.dev.dependencies]
