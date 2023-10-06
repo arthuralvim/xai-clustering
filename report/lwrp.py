@@ -36,6 +36,8 @@ def plot_relevance(
 def analyze_example(image, label, image_lwrp, pred_label):
     print("Ground Truth for this image: ", label)
     print("Prediction was: ", pred_label)
+    if not (label == pred_label):
+        print("This image is not classified correctly.")
     plot_relevance(
         image,
         image_lwrp,
@@ -43,5 +45,3 @@ def analyze_example(image, label, image_lwrp, pred_label):
         image_2_title="Layer Wise Relevance Propagation",
         cmap="seismic",
     )
-    if not (label == pred_label):
-        print("This image is not classified correctly.")

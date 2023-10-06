@@ -17,20 +17,36 @@ def tsne_scatter(features, labels, dimensions=2, random_state=42, save_as=None):
         ax = fig.add_subplot(111, projection="3d")
 
     ax.scatter(
-        *zip(*features_embedded[np.where(labels == 1)]),
+        *zip(*features_embedded[np.where(labels == 0)]),
         marker="o",
         color="r",
         s=2,
         alpha=0.7,
-        label="Fraude"
+        label="glioma"
     )
     ax.scatter(
-        *zip(*features_embedded[np.where(labels == 0)]),
+        *zip(*features_embedded[np.where(labels == 1)]),
         marker="o",
         color="g",
         s=2,
         alpha=0.3,
-        label="Normal"
+        label="meningioma"
+    )
+    ax.scatter(
+        *zip(*features_embedded[np.where(labels == 2)]),
+        marker="o",
+        color="y",
+        s=2,
+        alpha=0.3,
+        label="no tumor"
+    )
+    ax.scatter(
+        *zip(*features_embedded[np.where(labels == 3)]),
+        marker="o",
+        color="b",
+        s=2,
+        alpha=0.3,
+        label="pituitary"
     )
     plt.title("TSNE da Amostra", fontsize=18)
 

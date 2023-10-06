@@ -53,6 +53,11 @@ class LayerWiseRP(object):
         return indices
 
     def apply(self, model, image, device):
+        try:
+            model._modules["feature_extractor"]
+        except:
+            model = model.model
+
         image = torch.unsqueeze(image, 0)
 
         # >>> Step 1: Extract layers
