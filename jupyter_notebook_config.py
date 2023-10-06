@@ -889,7 +889,7 @@ c = get_config()  # noqa
 ## Gets or sets the maximum amount of memory, in bytes, that is allocated for use
 #  by the buffer manager.
 #  Default: 536870912
-c.ServerApp.max_buffer_size = 4000000000
+c.ServerApp.max_buffer_size = 10000000000
 
 ## Gets or sets a lower bound on the open file handles process resource limit.
 #  This may need to be increased if you run into an OSError: [Errno 24] Too many

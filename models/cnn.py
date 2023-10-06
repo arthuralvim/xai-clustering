@@ -9,7 +9,7 @@ import pytorch_lightning as pl
 from torchmetrics import MetricCollection, Accuracy, Precision, Recall
 
 
-class VGG(pl.LightningModule):
+class CNN(pl.LightningModule):
     def __init__(
         self,
         num_classes,
@@ -26,16 +26,6 @@ class VGG(pl.LightningModule):
         self.lr = lr
         self.weight_decay = weight_decay
 
-        backbone = models.vgg16(weights=models.VGG16_Weights.DEFAULT)
-        self.feature_extractor = backbone.features
-        self.avgpool = backbone.avgpool
-        self.classifier = backbone.classifier
-        top_layer_in_features = self.remove_top_layer(self.classifier)
-        self.add_top_layer(self.classifier, top_layer_in_features)
-
-        if freeze:
-            self.freeze_layers(self)
-
         # loop functions
         self.loss_fn = self.define_loss_fn()
         self.train_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
@@ -43,27 +33,25 @@ class VGG(pl.LightningModule):
         self.test_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
         self.save_hyperparameters()
 
+        self.feature_extractor = nn.Sequential(
+            nn.Conv2d(3, 16, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(16, 32, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+        )
+        self.classifier = nn.Sequential(
+            nn.Linear(32 * 63 * 63, 128),
+            nn.ReLU(inplace=True),
+            nn.Linear(128, self.num_classes),
+        )
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.feature_extractor(x)
-        x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.classifier(x)
         return x
-
-    def remove_top_layer(self, model):
-        in_features = model.pop(-1).in_features
-        return in_features
-
-    def add_top_layer(self, model, in_features):
-        model.append(nn.Linear(in_features, self.num_classes))
-
-    def freeze_layers(self, model):
-        # layers are frozen by using eval()
-        model.eval()
-        # freeze params
-        for name, param in model.named_parameters():
-            if param.requires_grad and "classifier.6" not in name:
-                param.requires_grad = False
 
     def define_loss_fn(self):
         return nn.CrossEntropyLoss()

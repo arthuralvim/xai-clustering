@@ -38,6 +38,14 @@ class BrainTumorMRI(BaseDataset):
     def classes(self):
         return ["glioma", "meningioma", "notumor", "pituitary"]
 
+    @property
+    def labels(self):
+        return self.classes
+
+    @property
+    def num_classes(self):
+        return len(self.classes)
+
     def generate_samplers(self):
         """Generating samplers for a holdout test."""
 
@@ -51,4 +59,7 @@ class BrainTumorMRI(BaseDataset):
 
         self.train_sampler = SubsetRandomSampler(train_idx)
         self.val_sampler = SubsetRandomSampler(val_idx)
+        self.train_val_sampler = SubsetRandomSampler(
+            np.concatenate([train_idx, val_idx])
+        )
         self.test_sampler = None

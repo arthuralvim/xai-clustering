@@ -31,6 +31,7 @@ class BaseDataset(object):
         train_size=None,
         val_size=None,
         test_size=None,
+        transforms=None,
     ):
         self.dataset_root = (
             self.config.get("dataset_root") if not dataset_root else dataset_root
@@ -46,6 +47,8 @@ class BaseDataset(object):
         self.test_sampler = None
         self.train_sampler = None
         self.val_sampler = None
+        if transforms is not None:
+            self.transforms = transforms
 
     @property
     def classes(self):
@@ -87,15 +90,19 @@ class BaseDataset(object):
 
         self.test_sampler = SubsetRandomSampler(test_idx)
         self.train_sampler = SubsetRandomSampler(train_idx)
+        self.train_val_sampler = SubsetRandomSampler(
+            np.concatenate([train_idx, val_idx])
+        )
         self.val_sampler = SubsetRandomSampler(val_idx)
 
     @property
     def train_transform(self):
+        if self.transforms is not None:
+            return self.transforms
         return transforms.Compose(
             [
                 transforms.Resize((255, 255)),
                 transforms.ToTensor(),
-                # transforms.Normalize(mean=mean, std=std)
             ]
         )
 
@@ -156,6 +163,12 @@ class BaseDataset(object):
             extra = {"sampler": sampler}
         return DataLoader(
             dataset, batch_size=self.batch_size, num_workers=self.num_workers, **extra
+        )
+
+    @property
+    def train_val_dataloader(self):
+        return self.generate_dataloader(
+            dataset=self.train_val_dataset, sampler=self.train_val_sampler
         )
 
     @property
