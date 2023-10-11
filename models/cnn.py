@@ -23,8 +23,13 @@ class CNN(pl.LightningModule):
         super().__init__()
 
         self.num_classes = num_classes
-        self.lr = lr
+        self.learning_rate = lr
         self.weight_decay = weight_decay
+
+        if dropout is None:
+            self.dropout = 0.3
+        else:
+            self.dropout = dropout
 
         # loop functions
         self.loss_fn = self.define_loss_fn()
@@ -37,9 +42,11 @@ class CNN(pl.LightningModule):
             nn.Conv2d(3, 16, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Dropout(self.dropout),
             nn.Conv2d(16, 32, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Dropout(self.dropout),
         )
         self.classifier = nn.Sequential(
             nn.Linear(32 * 63 * 63, 128),
@@ -57,7 +64,8 @@ class CNN(pl.LightningModule):
         return nn.CrossEntropyLoss()
 
     def configure_optimizers(self):
-        optim_kwargs = {"lr": self.lr, "weight_decay": self.weight_decay}
+        optim_kwargs = {"lr": self.learning_rate}
+
         trainable_parameters = filter(lambda p: p.requires_grad, self.parameters())
         optimizer = optim.Adam(trainable_parameters, **optim_kwargs)
         return optimizer

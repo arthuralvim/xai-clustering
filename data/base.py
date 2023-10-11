@@ -31,7 +31,7 @@ class BaseDataset(object):
         train_size=None,
         val_size=None,
         test_size=None,
-        transforms=None,
+        transformations=None,
     ):
         self.dataset_root = (
             self.config.get("dataset_root") if not dataset_root else dataset_root
@@ -47,8 +47,15 @@ class BaseDataset(object):
         self.test_sampler = None
         self.train_sampler = None
         self.val_sampler = None
-        if transforms is not None:
-            self.transforms = transforms
+        if transformations is None:
+            self.transforms = transforms.Compose(
+                [
+                    transforms.Resize((255, 255)),
+                    transforms.ToTensor(),
+                ]
+            )
+        else:
+            self.transforms = transformations
 
     @property
     def classes(self):
@@ -97,14 +104,7 @@ class BaseDataset(object):
 
     @property
     def train_transform(self):
-        if self.transforms is not None:
-            return self.transforms
-        return transforms.Compose(
-            [
-                transforms.Resize((255, 255)),
-                transforms.ToTensor(),
-            ]
-        )
+        return self.transforms
 
     @property
     def train_val_transform(self):
