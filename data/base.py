@@ -23,7 +23,7 @@ class BaseDataset(object):
 
     def __init__(
         self,
-        dataset_root,
+        dataset_root="./datasets/",
         random_state=333,
         reduce_to=None,
         batch_size=32,

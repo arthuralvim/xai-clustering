@@ -4,7 +4,7 @@ import torch.nn as nn
 import numpy as np
 
 
-class LayerWiseRP(object):
+class LRP(object):
     """
     This code was obtained and modified from:
     https://github.com/deepfindr/xai-series/
@@ -52,22 +52,22 @@ class LayerWiseRP(object):
         indices = [offset + val for val in indices]
         return indices
 
-    def apply(self, model, image, device):
+    def extract_layers(self, model):
         try:
             model._modules["feature_extractor"]
         except:
             model = model.model
 
-        image = torch.unsqueeze(image, 0)
-
         # >>> Step 1: Extract layers
         layers = (
-            list(model._modules["feature_extractor"])
-            + [model._modules["avgpool"]]
-            + self.dense_to_conv(list(model._modules["classifier"]))
+            list(model._modules["feature_extractor"]) + [model._modules["avgpool"]]
+            if "avgpool" in model._modules
+            else [] + self.dense_to_conv(list(model._modules["classifier"]))
         )
         linear_layer_indices = self.get_linear_layer_indices(model)
+        return layers, linear_layer_indices
 
+    def propagating_image_forward(self, layers, linear_layer_indices, image):
         # >>> Step 2: Propagate image through layers and store activations
         n_layers = len(layers)
         activations = [image] + [None] * n_layers  # list of activations
@@ -81,6 +81,7 @@ class LayerWiseRP(object):
                 activation = torch.flatten(activation, start_dim=1)
             activations[layer + 1] = activation
 
+    def last_layer_one_hot(self, activations, device):
         # >>> Step 3: Replace last layer with one-hot-encoding
         output_activation = activations[-1].detach().cpu().numpy()
         max_activation = output_activation.max()
@@ -96,6 +97,10 @@ class LayerWiseRP(object):
 
         activations[-1] = torch.FloatTensor(one_hot_output).to(device)
         # activations[-1] = torch.FloatTensor([one_hot_output]).to(device)
+        return activations
+
+    def propagating_relevance_backward(self, layers, activations):
+        n_layers = len(layers)
 
         # >>> Step 4: Backpropagate relevance scores
         relevances = [None] * n_layers + [activations[-1]]
@@ -139,11 +144,23 @@ class LayerWiseRP(object):
                 relevances[layer] = (activations[layer] * c).data
             else:
                 relevances[layer] = relevances[layer + 1]
+        return relevances
 
+    def apply_relevances_to_image(self, relevances):
         # >>> Potential Step 5: Apply different propagation rule for pixels
-
-        image_relevances = relevances[0].permute(0, 2, 3, 1).detach().cpu().numpy()[0]
-        image_relevances = np.interp(
-            image_relevances, (image_relevances.min(), image_relevances.max()), (0, 1)
+        image_relevance = relevances[0].permute(0, 2, 3, 1).detach().cpu().numpy()[0]
+        image_relevance = np.interp(
+            image_relevance, (image_relevance.min(), image_relevance.max()), (0, 1)
         )
-        return image_relevances
+        return image_relevance
+
+    def apply(self, model, image, device):
+        image = torch.unsqueeze(image, 0)
+        layers, linear_layer_indices = self.extract_layers(model)
+        activations = self.propagating_image_forward(
+            layers, linear_layer_indices, image
+        )
+        activations = self.last_layer_one_hot(activations, device)
+        relevances = self.propagating_relevance_backward(layers, activations)
+        image_relevance = self.apply_relevances_to_image(relevances)
+        return image_relevance

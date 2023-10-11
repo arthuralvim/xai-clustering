@@ -130,7 +130,7 @@ def plot_loss_curve(df_metrics, show=True, save_as=None):
         epochs, df_metrics["val_loss_epoch"], label="Validação", **validation_set.kw
     )
 
-    plt.ylabel("Custo", fontsize=14)
+    plt.ylabel("Erro", fontsize=14)
     plt.xlabel("Época", fontsize=14)
     plt.title("Curva de Decaimento do Erro", fontsize=18)
 
@@ -197,6 +197,55 @@ def plot_clustering_metrics(
     plt.xlabel("Época", fontsize=14)
     plt.title(title, fontsize=18)
     plt.legend(loc="best")
+
+    if save_as is not None:
+        plt.savefig(save_as)
+    if show:
+        plt.show()
+    plt.close(fig)
+
+
+def plot_analysis(
+    df_metrics, show=True, title="Análise do Aprendizado", figsize=(19, 9), save_as=None
+):
+    epochs = range(len(df_metrics["train_acc_epoch"]))
+    fig, axes = plt.subplots(1, 2, figsize=figsize)
+
+    # loss
+    axes[0].plot(
+        epochs,
+        df_metrics["train_loss_epoch"],
+        label="Treinamento",
+        **training_set.kw,
+    )
+    axes[0].plot(
+        epochs, df_metrics["val_loss_epoch"], label="Validação", **validation_set.kw
+    )
+    axes[0].set_xlim([0, max(epochs)])
+    axes[0].set_ylabel("Erro", fontsize=14)
+    axes[0].set_xlabel("Época", fontsize=14)
+    axes[0].set_title("Curva de Erro", fontsize=18)
+    axes[0].legend(loc="best")
+
+    # acc
+    axes[1].plot(
+        epochs,
+        df_metrics["train_acc_epoch"],
+        label="Treinamento",
+        **training_set.kw,
+    )
+    axes[1].plot(
+        epochs, df_metrics["val_acc_epoch"], label="Validação", **validation_set.kw
+    )
+    axes[1].set_xlim([0, max(epochs)])
+    axes[1].set_ylim([0, 100])
+
+    axes[1].set_ylabel("Acurácia", fontsize=14)
+    axes[1].set_xlabel("Época", fontsize=14)
+    axes[1].set_title("Curva de Acurácia", fontsize=18)
+    axes[1].legend(loc="best")
+
+    plt.title(title, fontsize=18)
 
     if save_as is not None:
         plt.savefig(save_as)
