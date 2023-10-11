@@ -3,31 +3,31 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay
 
 import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.patches import Patch
-from matplotlib import colors as mlt_colors
 import pandas as pd
-import seaborn as sns
 
 
 def plot_confusion_matrix(confusion, label_names, show=True, save_as=None):
-    fig = plt.figure(figsize=(6, 6))
-    fx = sns.heatmap(confusion, annot=True, fmt=".0f", cmap="RdBu")
-    fx.set_title("Confusion Matrix \n")
-    fx.set_xlabel("\n Predicted Values\n")
-    fx.set_ylabel("Actual Values\n")
-    fx.xaxis.set_ticklabels(label_names)
-    fx.yaxis.set_ticklabels(label_names)
+    conf_plot = ConfusionMatrixDisplay(
+        confusion_matrix=confusion, display_labels=label_names
+    )
+    conf_plot.plot(cmap=plt.cm.Grays)
+    conf_plot.ax_.set_title("Matriz de Confusão")
+    conf_plot.ax_.set_xlabel("\n Predição\n")
+    conf_plot.ax_.set_ylabel("Rótulos\n")
+    conf_plot.ax_.xaxis.set_ticklabels(label_names)
+    conf_plot.ax_.yaxis.set_ticklabels(label_names)
     plt.yticks(rotation=0)
     plt.xticks(rotation=30)
-    plt.tight_layout()
-    if save_as is not None:
-        plt.savefig(save_as)
+
     if show:
         plt.show()
-    plt.close(fig)
+    if save_as is not None:
+        plt.savefig(save_as)
+
+    plt.close()
 
 
 def basic_report(truth, predictions, labels, label_names, show=True, save_as=None):
@@ -39,12 +39,14 @@ def basic_report(truth, predictions, labels, label_names, show=True, save_as=Non
         digits=3,
         zero_division=0,
     )
-    confusion = pd.DataFrame(
-        confusion_matrix(truth, predictions),
+
+    print(cr)
+    confusion = confusion_matrix(truth, predictions)
+    confusion_pd = pd.DataFrame(
+        confusion,
         index=label_names,
         columns=[s[:3] for s in label_names],
     )
-    print("Classification report")
-    print(cr)
+    print(confusion_pd)
+
     plot_confusion_matrix(confusion, label_names, show=show, save_as=save_as)
-    return confusion

@@ -245,7 +245,7 @@ def plot_analysis(
     axes[1].set_title("Curva de Acurácia", fontsize=18)
     axes[1].legend(loc="best")
 
-    plt.title(title, fontsize=18)
+    fig.suptitle(title, fontsize=18)
 
     if save_as is not None:
         plt.savefig(save_as)

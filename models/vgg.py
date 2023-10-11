@@ -39,9 +39,8 @@ class VGG(BaseNet):
         model.append(nn.Linear(in_features, self.num_classes))
 
     def freeze_layers(self, model):
-        # layers are frozen by using eval()
         model.eval()
-        # freeze params
+
         for name, param in model.named_parameters():
             if param.requires_grad and "classifier.6" not in name:
                 param.requires_grad = False
