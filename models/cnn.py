@@ -29,6 +29,13 @@ class ConvNet(BaseNet):
         x = self.classifier(x)
         return x
 
+    def remove_top_layer(self, model):
+        in_features = model.pop(-1).in_features
+        return in_features
+
+    def add_top_layer(self, model, in_features):
+        model.append(nn.Linear(in_features, self.num_classes))
+
 
 class ConvNetComplex(BaseNet):
     def __init__(self, num_classes, dropout=0.0, lr=1e-4, *args, **kwargs):
@@ -76,3 +83,10 @@ class ConvNetComplex(BaseNet):
         x = torch.flatten(x, 1)
         x = self.classifier(x)
         return x
+
+    def remove_top_layer(self, model):
+        in_features = model.pop(-1).in_features
+        return in_features
+
+    def add_top_layer(self, model, in_features):
+        model.append(nn.Linear(in_features, self.num_classes))

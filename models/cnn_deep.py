@@ -17,13 +17,13 @@ from time import time
 from collections import Counter, deque
 
 from data.cluster import ReassignedDataset
-from models.vgg import VGG
+from models.cnn import ConvNet
 from models.timer import Timer
 from models.processors import pca_and_normalization
 from models.base import BaseNet
 
 
-class DVGG(BaseNet):
+class DConvNet(BaseNet):
     def __init__(
         self,
         dataset,
@@ -39,7 +39,7 @@ class DVGG(BaseNet):
     ):
         super().__init__(num_classes=num_classes, dropout=dropout, lr=lr)
 
-        self.model = VGG(
+        self.model = ConvNet(
             num_classes=num_classes,
             lr=lr,
             dropout=dropout,
