@@ -17,6 +17,7 @@ class ConvNet(BaseNet):
             nn.MaxPool2d(kernel_size=2, stride=2),
             nn.Dropout(self.dropout),
         )
+
         self.classifier = nn.Sequential(
             nn.Linear(32 * 63 * 63, 128),
             nn.ReLU(inplace=True),
@@ -28,6 +29,9 @@ class ConvNet(BaseNet):
         x = torch.flatten(x, 1)
         x = self.classifier(x)
         return x
+
+    def get_layers(self):
+        return list(self.feature_extractor) + list(self.classifier)
 
     def remove_top_layer(self, model):
         in_features = model.pop(-1).in_features

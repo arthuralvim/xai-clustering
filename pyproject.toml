@@ -27,6 +27,9 @@ rich = "^13.6.0"
 
 [tool.poetry.group.dev.dependencies]
 ipdb = "^0.13.13"
+pytest = "^7.4.2"
+pytest-cov = "^4.1.0"
+pytest-sugar = "^0.9.7"
 
 [build-system]
 requires = ["poetry-core"]

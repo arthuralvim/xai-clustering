@@ -70,6 +70,13 @@ class DVGG(BaseNet):
         x = self.model(x)
         return x
 
+    def get_layers(self):
+        return (
+            list(self.model.feature_extractor)
+            + [self.model.avgpool]
+            + list(self.model.classifier)
+        )
+
     @property
     def epoch_path(self):
         path = f"{self.logger.log_dir}/artifacts/{self.current_epoch}"

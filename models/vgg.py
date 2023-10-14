@@ -31,6 +31,9 @@ class VGG(BaseNet):
         x = self.classifier(x)
         return x
 
+    def get_layers(self):
+        return list(self.feature_extractor) + [self.avgpool] + list(self.classifier)
+
     def remove_top_layer(self, model):
         in_features = model.pop(-1).in_features
         return in_features
