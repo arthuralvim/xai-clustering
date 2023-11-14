@@ -165,3 +165,6 @@ experiments/*
 datasets/*
 !datasets/.gitkeep
 .vscode/*
+
+experiments*
+images*
